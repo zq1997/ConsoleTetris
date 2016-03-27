@@ -1,4 +1,4 @@
-#if (defined unix) || (defined __unix) || (defined __unix__)
+ï»¿#if (defined unix) || (defined __unix) || (defined __unix__)
 #define ON_UNIX
 #elif (defined WIN32) || (defined _WIN32) || (defined __WIN32) || (defined __WIN32__)
 #define ON_WINDOWS
@@ -56,7 +56,7 @@ if (color >= 1 && color <= 7) {\
 
 #define TO_POOL_AT(x, y) {TO_CONSOLE_AT(2 * x + 2, 21 - y);}
 
-#define PRINT_BLOCK(type) {SET_COLOR(type); printf(type == 0 ? "  " : type == 8 ? "V" : "àí");}
+#define PRINT_BLOCK(type) {SET_COLOR(type); printf(type == 0 ? "  " : type == 8 ? "ä¹‚" : "å›—");}
 
 #define MAX(a, b, c, d) ((a > b ? a : b) > (c > d ? c : d) ? (a > b ? a : b) : (c > d ? c : d))
 
@@ -195,7 +195,7 @@ void RedrawConsole(void)
             PRINT_BLOCK(game.pool[i][j]);
         }
     }
-    PRINTF_AT(40, 1, "ÏÂÒ»¸ö£º");
+    PRINTF_AT(40, 1, "ä¸‹ä¸€ä¸ªï¼š");
     for (i = 2; i < 6; i++) {
         PRINTF_AT(40, i, "        ");
     }
@@ -204,12 +204,12 @@ void RedrawConsole(void)
         PRINT_BLOCK(game.forecast.type);
     }
     SET_COLOR(0);
-    PRINTF_AT(40, 9, "µ±Ç°ÒÑµÃ·Ö\t%ld", game.mark);
-    PRINTF_AT(40, 11, "µ±Ç°°å¿éÊý\t%ld", game.count);
-    PRINTF_AT(40, 17, "WASD¿ØÖÆ·½¿é");
-    PRINTF_AT(40, 18, "ctrl+P¼üÔÝÍ£");
-    PRINTF_AT(40, 19, "ctrl+W¼ü±£´æ½ø¶È");
-    PRINTF_AT(40, 20, "ctrl+R¼üÔØÈë½ø¶È");
+    PRINTF_AT(40, 9, "å½“å‰å·²å¾—åˆ†\t%ld", game.mark);
+    PRINTF_AT(40, 11, "å½“å‰æ¿å—æ•°\t%ld", game.count);
+    PRINTF_AT(40, 17, "WASDæŽ§åˆ¶æ–¹å—");
+    PRINTF_AT(40, 18, "ctrl+Pé”®æš‚åœ");
+    PRINTF_AT(40, 19, "ctrl+Wé”®ä¿å­˜è¿›åº¦");
+    PRINTF_AT(40, 20, "ctrl+Ré”®è½½å…¥è¿›åº¦");
     TO_CONSOLE_AT(0, 22);
 }
 
@@ -298,13 +298,13 @@ int main()
                     RedrawPlate();
                 }
             } else if (DO_PAUSE == kick) {
-                ShowInfo("ÓÎÏ·ÒÑÔÝÍ££¬°´ÈÎÒâ¼ü¼ÌÐø");
+                ShowInfo("æ¸¸æˆå·²æš‚åœï¼ŒæŒ‰ä»»æ„é”®ç»§ç»­");
             } else if (DO_WRITE == kick) {
                 FILE *fp = fopen("ConsoleTetris.progress", "w");
                 if (fp != NULL) {
                     fwrite(&game, sizeof(game), 1, fp);
                     fclose(fp);
-                    ShowInfo("Ð´Èë½ø¶È³É¹¦£¬°´ÈÎÒâ¼ü¼ÌÐø");
+                    ShowInfo("å†™å…¥è¿›åº¦æˆåŠŸï¼ŒæŒ‰ä»»æ„é”®ç»§ç»­");
                 }
             } else if (DO_READ == kick) {
                 FILE *fp = fp = fopen("ConsoleTetris.progress", "r");
@@ -313,7 +313,7 @@ int main()
                     fclose(fp);
                     RedrawConsole();
                     RedrawPlate();
-                    ShowInfo("ÔØÈë½ø¶È³É¹¦£¬°´ÈÎÒâ¼ü¼ÌÐø");
+                    ShowInfo("è½½å…¥è¿›åº¦æˆåŠŸï¼ŒæŒ‰ä»»æ„é”®ç»§ç»­");
                 }
             }
         }
@@ -345,7 +345,7 @@ int main()
         int isOverFlow = 0;
         for (i = 1; i < 11 && !isOverFlow; isOverFlow = game.pool[i++][21]);
         if (isOverFlow) {
-            ShowInfo("GAME OVER£¬°´ÈÎÒâ¼üÍË³ö");
+            ShowInfo("GAME OVERï¼ŒæŒ‰ä»»æ„é”®é€€å‡º");
             break;
         }
     }
