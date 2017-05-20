@@ -23,7 +23,7 @@
 
 #define DO_LEFT 0
 #define DO_RIGHT 1
-#define DO_RORATE 2
+#define DO_ROTATE 2
 #define DO_DOWN 3
 #define DO_PAUSE 4
 #define DO_WRITE 5
