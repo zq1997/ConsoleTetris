@@ -1,10 +1,13 @@
 #include "platform.h"
 
+#include <stdarg.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
 #include <string.h>
 #include <stdbool.h>
+#include <wchar.h>
+#include <locale.h>
 
 
 #define SAVE_FILE               "ConsoleTetris.dat"
@@ -62,9 +65,7 @@ typedef struct {
 
 
 // 利用坐标获取游戏池的方块了类型，以左下第一个非墙壁方块为坐标原点，右上为正
-BlockType *well_block(GameInfo *game, Coordinate x, Coordinate y);
-
-inline BlockType *well_block(GameInfo *game, Coordinate x, Coordinate y) {
+static inline BlockType *well_block(GameInfo *game, Coordinate x, Coordinate y) {
     return &game->well[(y + WALL_THICKNESS) * (game->width + 2 * WALL_THICKNESS)
                        + x + WALL_THICKNESS];
 }
@@ -84,31 +85,33 @@ Coordinate count_row(GameInfo *game, Coordinate y) {
 // 前者以游戏池左下第一个非墙壁方块为坐标原点，后者以控制台左上角为坐标原点
 // 前者右上为坐标正方向，后者右下
 // 前者以2个字符为1个单位坐标（因为方块是2字符宽度），后者1字符1坐标
-void set_cursor(GameInfo *game, Coordinate x, Coordinate y);
-
-inline void set_cursor(GameInfo *game, Coordinate x, Coordinate y) {
+static inline void set_cursor(GameInfo *game, Coordinate x, Coordinate y) {
     set_cursor_absolute_position(
             2 * (x + WALL_THICKNESS + WELL_MARGIN),
             game->height + EXTRA_VISIBLE - 1 - y);
 }
 
 
-// 在右侧信息面板的某一行输出信息文本
-void print_at_info_panel(GameInfo *game, Coordinate line, const char *info);
-
-inline void print_at_info_panel(GameInfo *game, Coordinate line, const char *info) {
+// 在右侧信息面板的某一行输出信息文本，格式化输出
+static inline void printf_at_info_panel(GameInfo *game, Coordinate line, const char *format, ...) {
     set_cursor(game, game->width + WALL_THICKNESS + WELL_MARGIN + PANEL_MARGIN, line);
-    print_text("%s", info);
+    clear_color();
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
 }
 
+// 同上，但进行非格式化输出
+static inline void print_at_info_panel(GameInfo *game, Coordinate line, const wchar_t *info) {
+    printf_at_info_panel(game, line, "%ls", info);
+}
 
 // 输出一条提示消息并暂停程序，按任意键后继续
-void alert_message(GameInfo *game, const char *info) {
-    print_at_info_panel(game, 18, "");
-    print_text("%.40s", info);
+void alert_message(GameInfo *game, const wchar_t *info) {
+    printf_at_info_panel(game, 18, "%.40ls", info);
     while (get_action(100) == ACTION_EMPTY);
-    print_at_info_panel(game, 18, "");
-    print_text("%-40s", "");
+    printf_at_info_panel(game, 18, "%-40ls", L"");
 }
 
 
@@ -129,16 +132,13 @@ void redraw_info_panel(GameInfo *game) {
     Coordinate offset_x = game->width + WALL_THICKNESS + WELL_MARGIN + PANEL_MARGIN;
     Coordinate offset_y = 12;
     for (Coordinate f = 0; f < FORECAST_COUNT; f++) {
-        draw_single_tetrimino(game, &game->forecasts[f], false,
-                              offset_x + f * MAX_TETRIMINO_LENGTH, offset_y);
-        draw_single_tetrimino(game, &game->forecasts[f + 1], true,
-                              offset_x + f * MAX_TETRIMINO_LENGTH, offset_y);
+        Coordinate this_offset_x = offset_x + f * (MAX_TETRIMINO_LENGTH + 1);
+        draw_single_tetrimino(game, &game->forecasts[f], false, this_offset_x, offset_y);
+        draw_single_tetrimino(game, &game->forecasts[f + 1], true, this_offset_x, offset_y);
     }
 
-    print_at_info_panel(game, 10, "");
-    print_text("得分：\t%"PRIu32, game->scores);
-    print_at_info_panel(game, 9, "");
-    print_text("数量：\t%"PRIu32, game->count);
+    printf_at_info_panel(game, 10, "%ls: \t%"PRIu32, L"得分", game->scores);
+    printf_at_info_panel(game, 9, "%ls: \t%"PRIu32, L"数量", game->count);
 }
 
 
@@ -156,13 +156,13 @@ void redraw_well(GameInfo *game) {
 // 初始化显示，清屏并输出一些固定文字
 void init_display(GameInfo *game) {
     clear_screen();
-    print_at_info_panel(game, 6, "WSAD/方向键 旋转平移");
-    print_at_info_panel(game, 5, "空格/回车 快速下降");
-    print_at_info_panel(game, 4, "ctrl+P 暂停");
-    print_at_info_panel(game, 3, "ctrl+W 保存进度");
-    print_at_info_panel(game, 2, "ctrl+R 载入进度");
-    print_at_info_panel(game, 1, "ctrl+N 重新开始");
-    print_at_info_panel(game, 0, "ctrl+C 退出");
+    print_at_info_panel(game, 6, L"WSAD/方向键 旋转平移");
+    print_at_info_panel(game, 5, L"空格/回车 快速下降");
+    print_at_info_panel(game, 4, L"ctrl+P 暂停");
+    print_at_info_panel(game, 3, L"ctrl+W 保存进度");
+    print_at_info_panel(game, 2, L"ctrl+R 载入进度");
+    print_at_info_panel(game, 1, L"ctrl+N 重新开始");
+    print_at_info_panel(game, 0, L"ctrl+C 退出");
     // 很奇怪，这里不fflush会导致MAC下显示异常
     fflush(stdout);
     redraw_well(game);
@@ -312,7 +312,7 @@ GameInfo *start_game(GameInfo *game) {
         redraw_info_panel(game);
         // 判断是否游戏结束
         if (count_row(game, game->height)) {
-            alert_message(game, "GAME OVER，按任意键退出");
+            alert_message(game, L"GAME OVER，按任意键退出");
             return NULL;
         }
         draw_single_tetrimino(game, &game->current, true, 0, 0);
@@ -345,19 +345,19 @@ GameInfo *start_game(GameInfo *game) {
                     frame = tetrimino_moved ? 0 : FRAME_PER_ROW;
                     break;
                 case ACTION_PAUSE:
-                    alert_message(game, "游戏已暂停，按任意键继续");
+                    alert_message(game, L"游戏已暂停，按任意键继续");
                     break;
                 case ACTION_SAVE:
                     alert_message(game, save_game(game) ?
-                                        "保存进度成功，按任意键继续" :
-                                        "保存进度失败，按任意键继续");
+                                        L"保存进度成功，按任意键继续" :
+                                        L"保存进度失败，按任意键继续");
                     break;
                 case ACTION_LOAD:
                     if ((loaded_game = load_game())) {
-                        alert_message(game, "载入进度成功，按任意键开始");
+                        alert_message(game, L"载入进度成功，按任意键开始");
                         return loaded_game;
                     } else {
-                        alert_message(game, "载入进度失败，按任意键开始");
+                        alert_message(game, L"载入进度失败，按任意键开始");
                     }
                     break;
                 case ACTION_NEW_GAME:
@@ -411,6 +411,7 @@ void signal_kill(int sig) {
 
 
 int main(void) {
+    setlocale(LC_CTYPE, "");
     // 准备控制台
     prepare_console();
     // 信号处理

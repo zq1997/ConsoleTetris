@@ -8,7 +8,6 @@
 
 
 static HANDLE handle;
-static UINT old_cp;
 static CONSOLE_CURSOR_INFO old_cursor_info;
 static CONSOLE_SCREEN_BUFFER_INFO old_console_info;
 
@@ -55,22 +54,16 @@ void print_block(BlockType type) {
         printf("  ");
     } else if (type == BLOCK_TYPE_WALL) {
         SetConsoleTextAttribute(handle, DEFAULT_COLOR);
-        printf("::");
+        printf("%ls", L"囗");
     } else {
         SetConsoleTextAttribute(handle, (type % 6 + 1) | FOREGROUND_INTENSITY);
-        printf("▇");
+        printf("%ls", L"田");
     }
 }
 
-
-void print_text(const char *format, ...) {
+void clear_color(void) {
     SetConsoleTextAttribute(handle, DEFAULT_COLOR);
-    va_list args;
-    va_start(args, format);
-    vprintf(format, args);
-    va_end(args);
 }
-
 
 void set_cursor_absolute_position(Coordinate x, Coordinate y) {
     // 窗口最左侧为X轴零点，但以光标初始高度为Y轴零点

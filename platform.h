@@ -31,8 +31,8 @@ void clear_screen(void);
 // 绘制一个方块
 void print_block(BlockType type);
 
-// 输出文字
-void print_text(const char *format, ...);
+// 清除颜色，输出文字前调用
+void clear_color(void);
 
 // 设置输出光标的位置
 void set_cursor_absolute_position(Coordinate x, Coordinate y);

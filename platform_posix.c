@@ -1,7 +1,5 @@
 #include "platform.h"
 
-#include <stdarg.h>
-
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -63,20 +61,15 @@ void print_block(BlockType type) {
     if (type == BLOCK_TYPE_NULL) {
         printf(ESC"0;37;40m  ");
     } else if (type == BLOCK_TYPE_WALL) {
-        printf(ESC"0;37;40m::");
+        printf(ESC"0;37;40m%ls", L"囗");
     } else {
-        printf(ESC"%d;40;1m田", type % 6 + 31);
+        printf(ESC"%d;40;1m%ls", type % 6 + 31, L"田");
     }
 }
 
-void print_text(const char *format, ...) {
+void clear_color(void) {
     printf(ESC"0;37;40m");
-    va_list args;
-    va_start(args, format);
-    vprintf(format, args);
-    va_end(args);
 }
-
 
 void set_cursor_absolute_position(Coordinate x, Coordinate y) {
     // POSIX控制台坐标从1开始
