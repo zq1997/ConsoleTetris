@@ -1,0 +1,68 @@
+trigger:
+  - master
+
+stages:
+  - stage: 'compile'
+    jobs:
+      - job: 'linux'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: CMake@1
+            inputs:
+              workingDirectory: $(Build.BinariesDirectory)
+              cmakeArgs: $(Build.SourcesDirectory)
+          - script: make -C $(Build.BinariesDirectory)
+          - script: cd $(Build.BinariesDirectory) && mv ConsoleTetris ConsoleTetris-Linux
+          - publish: $(Build.BinariesDirectory)/ConsoleTetris-Linux
+            artifact: 'Linux'
+      - job: 'macOS'
+        pool:
+          vmImage: 'macOS-latest'
+        steps:
+          - task: CMake@1
+            inputs:
+              workingDirectory: $(Build.BinariesDirectory)
+              cmakeArgs: $(Build.SourcesDirectory)
+          - script: make -C $(Build.BinariesDirectory)
+          - script: cd $(Build.BinariesDirectory) && mv ConsoleTetris ConsoleTetris-macOS
+          - publish: $(Build.BinariesDirectory)/ConsoleTetris-macOS
+            artifact: 'macOS'
+      - job: 'windows'
+        pool:
+          vmImage: 'windows-latest'
+        steps:
+          - task: CMake@1
+            inputs:
+              workingDirectory: $(Build.BinariesDirectory)
+              cmakeArgs: $(Build.SourcesDirectory)
+          - task: VSBuild@1
+            inputs:
+              solution: $(Build.BinariesDirectory)\*.sln
+              maximumCpuCount: true
+              msbuildArchitecture: x64
+              configuration: Release
+          - script: cd $(Build.BinariesDirectory)\Release && move ConsoleTetris.exe ConsoleTetris-Windows.exe
+          - publish: $(Build.BinariesDirectory)\Release\ConsoleTetris-Windows.exe
+            artifact: 'Windows'
+  - stage: 'release'
+    jobs:
+      - job: 'release'
+        steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              patterns: '**'
+              path: $(Build.ArtifactStagingDirectory)
+          - task: GitHubRelease@1
+            inputs:
+              gitHubConnection: 'zq1997'
+              repositoryName: 'zq1997/ConsoleTetris'
+              action: 'edit'
+              tag: 'latest'
+              title: '最新版本'
+              releaseNotesSource: 'inline'
+              releaseNotesInline: '运行于x86_64机器d的Windows、Linux和macOS可执行文件'
+              addChangeLog: false
+              assetUploadMode: 'delete'
+              assets: $(Build.ArtifactStagingDirectory)/**
+
